@@ -1,46 +1,49 @@
 import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 import os
-import gdown
+import requests
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
-# === CONFIG ===
+# === SETTINGS ===
 IMG_SIZE = (128, 128)
 MODEL_PATH = "tongue_health_model.h5"
 GDRIVE_MODEL_URL = "https://drive.google.com/uc?id=1cFc1hSHY02PGTdgWIsX3y3ubyOCbpkU4"
 
+# === MODEL LOADER WITH DOWNLOAD ===
 @st.cache_resource
-def load_trained_model():
+def load_tongue_model():
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("Downloading model from Google Drive..."):
-            gdown.download(GDRIVE_MODEL_URL, MODEL_PATH, quiet=False)
+        st.info("🔄 Downloading model...")
+        with open(MODEL_PATH, "wb") as f:
+            response = requests.get(GDRIVE_MODEL_URL)
+            f.write(response.content)
+        st.success("✅ Model downloaded.")
     return load_model(MODEL_PATH)
 
+# === TONGUE SEGMENTATION FUNCTION ===
 def extract_tongue_region(image):
-    img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    img = np.array(image)
     img = cv2.resize(img, (512, 512))
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
-    # Red hue ranges for tongue detection
-    lower = np.array([0, 30, 50])
-    upper = np.array([20, 255, 255])
-    mask1 = cv2.inRange(hsv, lower, upper)
-
+    # Red-pink tongue ranges
+    lower1 = np.array([0, 30, 50])
+    upper1 = np.array([20, 255, 255])
     lower2 = np.array([160, 30, 50])
     upper2 = np.array([180, 255, 255])
+    mask1 = cv2.inRange(hsv, lower1, upper1)
     mask2 = cv2.inRange(hsv, lower2, upper2)
-
     mask = cv2.bitwise_or(mask1, mask2)
 
-    # Morphological filtering
+    # Morphological clean
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
-    # Find largest contour
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return None
@@ -51,25 +54,25 @@ def extract_tongue_region(image):
 
     result = cv2.bitwise_and(img, img, mask=tongue_mask)
     result[tongue_mask == 0] = (255, 255, 255)
-    result_rgb = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
-    return Image.fromarray(result_rgb)
+    return Image.fromarray(result)
 
+# === PREDICT FUNCTION ===
 def predict(image):
-    model = load_trained_model()
-    image = image.resize(IMG_SIZE)
-    img_array = img_to_array(image) / 255.0
+    model = load_tongue_model()
+    img = image.resize(IMG_SIZE)
+    img_array = img_to_array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
     prediction = model.predict(img_array)
     class_index = np.argmax(prediction)
     confidence = prediction[0][class_index] * 100
-    class_name = "Healthy (Non-staining moss)" if class_index == 0 else "Unhealthy (Stained moss)"
-    return class_name, confidence
+    label = "Healthy (Non-staining moss)" if class_index == 0 else "Unhealthy (Stained moss)"
+    return label, confidence
 
 # === STREAMLIT UI ===
-st.set_page_config(page_title="Tongue Health Detection", layout="centered")
+st.set_page_config(page_title="Tongue Health Detection", page_icon="🧠")
 st.title("🧠 Tongue Health Detection")
-st.markdown("Upload a **tongue image**, and the model will predict its **health status** based on color features.")
+st.markdown("Upload a tongue image, and the model will predict its health status based on color features.")
 
 uploaded_file = st.file_uploader("📤 Upload Image", type=["jpg", "jpeg", "png"])
 
@@ -86,4 +89,4 @@ if uploaded_file is not None:
         st.success(f"✅ Prediction: **{label}**")
         st.info(f"🔍 Confidence: **{confidence:.2f}%**")
     else:
-        st.error("❌ Could not detect tongue region. Try a clearer image.")
+        st.error("❌ Could not detect tongue region. Try a clearer or more zoomed-in image.")
