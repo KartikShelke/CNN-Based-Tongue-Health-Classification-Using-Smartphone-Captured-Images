@@ -23,7 +23,7 @@ def load_tongue_model():
         st.success("✅ Model downloaded.")
     return load_model(MODEL_PATH)
 
-# === TONGUE SEGMENTATION FUNCTION ===
+# === TONGUE SEGMENTATION FUNCTION ====
 def extract_tongue_region(image):
     img = np.array(image)
     img = cv2.resize(img, (512, 512))
