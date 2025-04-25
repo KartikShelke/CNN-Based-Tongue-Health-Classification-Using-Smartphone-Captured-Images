@@ -91,7 +91,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🧠 Tongue Health Detection")
+st.title("😛 Tongue Health Detection")
 st.markdown("Upload a tongue image, and the model will predict its health status based on color features.")
 st.markdown("Designed By.-  \n• Kartik Shelke  \n• Amit Rathod  \n• Kamlesh Pawar")
 st.markdown("Guided By.-  \n• Dr. Usha Verma")
