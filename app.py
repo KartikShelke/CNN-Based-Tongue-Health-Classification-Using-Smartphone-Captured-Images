@@ -73,7 +73,7 @@ def predict(image):
     return label, confidence
 
 # === STREAMLIT UI ===
-st.set_page_config(page_title="Tongue Health Detection", page_icon="🧠")
+st.set_page_config(page_title="Tongue Health Detection", page_icon="👅😛")
 
 # Custom CSS
 st.markdown("""
