@@ -8,7 +8,6 @@ import requests
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
-# === SETTINGS ===
 IMG_SIZE = (128, 128)
 MODEL_PATH = "tongue_health_model.h5"
 #GDRIVE_MODEL_URL = "https://drive.google.com/uc?id=1cFc1hSHY02PGTdgWIsX3y3ubyOCbpkU4"  
