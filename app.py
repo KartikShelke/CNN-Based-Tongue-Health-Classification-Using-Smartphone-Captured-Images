@@ -92,6 +92,12 @@ st.markdown(
 
 st.title("🧠 Tongue Health Detection")
 st.markdown("Upload a tongue image, and the model will predict its health status based on color features.")
+st.markdown("Designed By.-")
+st.markdown("    Kartik Shelke")
+st.markdown("    Amit Rathod")
+st.markdown("    Kamlesh Pawar")
+st.markdown("Guided By.-")
+st.markdown("    Dr. Usha Varma")
 
 uploaded_file = st.file_uploader("📤 Upload Image", type=["jpg", "jpeg", "png"])
 
